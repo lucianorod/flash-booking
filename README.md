@@ -95,7 +95,6 @@ flowchart TD
 stateDiagram-v2
     [*] --> PENDING: Criação com sucesso (POST /events/{id}/reservations)
     
-    PENDING --> CONFIRMED: Pagamento processado
     PENDING --> EXPIRED: Tempo limite atingido (15 min) -> Estoque devolvido
     PENDING --> CANCELLED: Cancelamento manual (DELETE /reservations/{id}) -> Estoque devolvido
     
@@ -103,6 +102,14 @@ stateDiagram-v2
     
     EXPIRED --> [*]
     CANCELLED --> [*]
+
+    note right of CONFIRMED
+        Ainda não implementado: não existe hoje
+        nenhum fluxo que transicione PENDING -> CONFIRMED
+        (depende do fluxo de pagamento do item 2 em
+        "Evoluções Futuras"). O cancelamento já aceita
+        esse status para quando ele existir.
+    end note
 ```
 
 ---
@@ -171,11 +178,11 @@ O projeto adota uma estratégia rigorosa de testes orientada a cenários reais d
 
 | Método | Rota | Descrição | Status HTTP |
 |---|---|---|---|
-| `POST` | `/events` | Cria um novo evento | `201 Created` |
-| `GET` | `/events/{id}` | Consulta o saldo de ingressos em tempo real | `200 OK` |
-| `POST` | `/events/{eventId}/reservations` | Cria uma reserva de ingressos (Requer header `Idempotency-Key`) | `201 Created` / `200 OK` |
-| `GET` | `/reservations/{id}` | Consulta os detalhes de uma reserva | `200 OK` |
-| `DELETE` | `/reservations/{id}` | Cancela uma reserva pendente ou confirmada | `204 No Content` |
+| `POST` | `/events` | Cria um novo evento | `201 Created` / `400 Bad Request` |
+| `GET` | `/events/{id}` | Consulta o saldo de ingressos em tempo real | `200 OK` / `404 Not Found` |
+| `POST` | `/events/{eventId}/reservations` | Cria uma reserva de ingressos (Requer header `Idempotency-Key`) | `201 Created` / `200 OK` / `400 Bad Request` / `404 Not Found` / `409 Conflict` |
+| `GET` | `/reservations/{id}` | Consulta os detalhes de uma reserva | `200 OK` / `404 Not Found` |
+| `DELETE` | `/reservations/{id}` | Cancela uma reserva pendente ou confirmada | `204 No Content` / `404 Not Found` / `409 Conflict` |
 
 ### 1. Criar Evento
 Cadastra um novo evento com sua capacidade inicial.
@@ -200,6 +207,7 @@ curl -X POST http://localhost:8080/events \
   "updatedAt": "2026-08-24T10:00:00Z"
 }
 ```
+Retorna `400 Bad Request` se `name` estiver vazio ou `totalCapacity` for ausente/não positivo.
 
 ---
 
@@ -217,6 +225,7 @@ curl -X GET http://localhost:8080/events/3fa85f64-5717-4562-b3fc-2c963f66afa6
   "availableCapacity": 996
 }
 ```
+Retorna `404 Not Found` se o evento não existir.
 
 ---
 
@@ -239,6 +248,7 @@ curl -X POST http://localhost:8080/events/3fa85f64-5717-4562-b3fc-2c963f66afa6/r
   "status": "PENDING"
 }
 ```
+Retorna `400 Bad Request` se o header `Idempotency-Key` estiver ausente ou `quantity` for inválida, `404 Not Found` se o evento não existir, e `409 Conflict` se não houver saldo suficiente.
 
 ---
 
@@ -259,6 +269,7 @@ curl -X GET http://localhost:8080/reservations/a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5
   "expiresAt": "2026-08-24T10:15:00Z"
 }
 ```
+Retorna `404 Not Found` se a reserva não existir.
 
 ---
 
@@ -268,7 +279,7 @@ Cancela a reserva, estorna a quantidade ao saldo disponível no Redis e agenda a
 ```bash
 curl -X DELETE http://localhost:8080/reservations/a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d
 ```
-**Resposta:** `204 No Content` (idempotente) ou `409 Conflict` (se a reserva já expirou).
+**Resposta:** `204 No Content` (idempotente), `404 Not Found` (reserva inexistente) ou `409 Conflict` (se a reserva já expirou).
 
 ---
 
