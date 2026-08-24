@@ -115,12 +115,16 @@ class ReservationExpirationIntegrationTest {
 		val hash = redisTemplate.opsForHash<String, String>()
 			.entries(ReservationLuaExecutor.reservationRedisKey(reservationUuid))
 		assertEquals("CANCELLED", hash["status"])
+		awaitUntil {
+			reservationRepository.findById(reservationUuid).map { it.status == ReservationStatus.CANCELLED }.orElse(false)
+		}
 	}
 
 	@Test
 	fun `deve retornar 409 ao cancelar reserva apos expiracao automatica, sem devolver saldo novamente`() {
 		val eventId = createEvent(totalCapacity = 10)
 		val reservationId = createReservation(eventId, quantity = 3)
+		val reservationUuid = UUID.fromString(reservationId)
 
 		forceExpired(reservationId)
 		expirationSweepTask.expirePendingReservations()
@@ -133,5 +137,8 @@ class ReservationExpirationIntegrationTest {
 			.statusCode(409)
 
 		assertEquals("10", availableCapacity(eventId))
+		awaitUntil {
+			reservationRepository.findById(reservationUuid).map { it.status == ReservationStatus.EXPIRED }.orElse(false)
+		}
 	}
 }

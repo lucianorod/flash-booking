@@ -50,7 +50,7 @@ class ReservationCreationIntegrationTest {
 			.then()
 			.statusCode(201)
 			.extract()
-			.path<String>("id")
+			.path("id")
 
 	private fun availableCapacity(eventId: String): String? =
 		redisTemplate.opsForValue().get(EventAvailabilityCache.availabilityKey(UUID.fromString(eventId)))
@@ -115,6 +115,7 @@ class ReservationCreationIntegrationTest {
 			.body("reservationId", equalTo(firstReservationId))
 
 		assertEquals("8", availableCapacity(eventId))
+		awaitUntil { reservationRepository.findById(UUID.fromString(firstReservationId)).isPresent }
 	}
 
 	@Test

@@ -3,6 +3,7 @@ package com.flashbooking.reservation
 import com.flashbooking.event.EventAvailabilityCache
 import com.flashbooking.event.EventRepository
 import com.flashbooking.testsupport.TestRedisConfiguration
+import com.flashbooking.testsupport.awaitUntil
 import io.restassured.RestAssured
 import io.restassured.http.ContentType
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -85,5 +86,7 @@ class ReservationConcurrencyIntegrationTest {
 		val available = redisTemplate.opsForValue()
 			.get(EventAvailabilityCache.availabilityKey(UUID.fromString(eventId)))
 		assertEquals("0", available)
+
+		awaitUntil { reservationRepository.count() == 1L }
 	}
 }

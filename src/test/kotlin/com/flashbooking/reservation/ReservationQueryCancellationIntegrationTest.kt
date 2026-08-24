@@ -80,6 +80,8 @@ class ReservationQueryCancellationIntegrationTest {
 			.body("eventId", equalTo(eventId))
 			.body("quantity", equalTo(3))
 			.body("status", equalTo("PENDING"))
+
+		awaitUntil { reservationRepository.findById(UUID.fromString(reservationId)).isPresent }
 	}
 
 	@Test
@@ -149,6 +151,9 @@ class ReservationQueryCancellationIntegrationTest {
 			.statusCode(204)
 
 		assertEquals("10", availableCapacity(eventId))
+		awaitUntil {
+			reservationRepository.findById(UUID.fromString(reservationId)).map { it.status == ReservationStatus.CANCELLED }.orElse(false)
+		}
 	}
 
 	@Test
@@ -156,6 +161,7 @@ class ReservationQueryCancellationIntegrationTest {
 		val eventId = createEvent(totalCapacity = 10)
 		val reservationId = createReservation(eventId, quantity = 3)
 		val reservationUuid = UUID.fromString(reservationId)
+		awaitUntil { reservationRepository.findById(reservationUuid).isPresent }
 		redisTemplate.opsForHash<String, String>()
 			.put(ReservationLuaExecutor.reservationRedisKey(reservationUuid), "status", "EXPIRED")
 		assertEquals("7", availableCapacity(eventId))
