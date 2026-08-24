@@ -1,5 +1,6 @@
 package com.flashbooking.reservation
 
+import com.flashbooking.event.EventAvailabilityQueryService
 import com.flashbooking.reservation.dto.CreateReservationRequest
 import com.flashbooking.reservation.dto.ReservationResponse
 import org.slf4j.LoggerFactory
@@ -11,7 +12,8 @@ import java.util.UUID
 @Service
 class ReservationService(
 	private val reservationLuaExecutor: ReservationLuaExecutor,
-	private val reservationProperties: ReservationProperties
+	private val reservationProperties: ReservationProperties,
+	private val eventAvailabilityQueryService: EventAvailabilityQueryService
 ) {
 
 	private val log = LoggerFactory.getLogger(ReservationService::class.java)
@@ -21,6 +23,8 @@ class ReservationService(
 		idempotencyKey: String,
 		request: CreateReservationRequest
 	): ReservationCreationResult {
+		eventAvailabilityQueryService.getAvailability(eventId)
+
 		val reservationId = UUID.randomUUID()
 		val expiresAt = Instant.now().plus(reservationProperties.holdMinutes, ChronoUnit.MINUTES)
 

@@ -41,6 +41,13 @@ O sistema SHALL responder com status 409 (Conflict), sem aceitar a reserva, quan
 - **WHEN** uma requisição `POST /events/<id>/reservations` solicita uma quantidade maior do que o saldo disponível do evento
 - **THEN** o sistema responde com status 409 (Conflict) e nenhuma reserva é criada
 
+### Requirement: Recusa de reserva para evento inexistente
+O sistema SHALL responder com status 404 (Not Found), sem aceitar a reserva, quando `POST /events/<id>/reservations` for chamado para um identificador de evento que não corresponde a nenhum evento conhecido.
+
+#### Scenario: Requisição de reserva para evento inexistente
+- **WHEN** uma requisição `POST /events/<id>/reservations` é enviada para um identificador de evento que não corresponde a nenhum evento conhecido no Redis nem no Postgres
+- **THEN** o sistema responde com status 404 (Not Found) e nenhuma reserva é criada
+
 ### Requirement: Validação dos dados de entrada da reserva
 O sistema SHALL validar a presença do header `Idempotency-Key` e do `userId`, e que `quantity` seja um inteiro positivo, retornando um erro explícito sem criar a reserva quando os dados forem inválidos.
 

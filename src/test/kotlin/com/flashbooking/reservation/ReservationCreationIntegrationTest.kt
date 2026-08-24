@@ -135,6 +135,20 @@ class ReservationCreationIntegrationTest {
 	}
 
 	@Test
+	fun `deve retornar 404 ao criar reserva para evento inexistente`() {
+		RestAssured.given()
+			.contentType(ContentType.JSON)
+			.header("Idempotency-Key", UUID.randomUUID().toString())
+			.body("""{"userId": "${UUID.randomUUID()}", "quantity": 1}""")
+			.`when`()
+			.post("/events/${UUID.randomUUID()}/reservations")
+			.then()
+			.statusCode(404)
+
+		assertEquals(0, reservationRepository.count())
+	}
+
+	@Test
 	fun `deve retornar 400 quando o header Idempotency-Key estiver ausente`() {
 		val eventId = createEvent(totalCapacity = 10)
 
