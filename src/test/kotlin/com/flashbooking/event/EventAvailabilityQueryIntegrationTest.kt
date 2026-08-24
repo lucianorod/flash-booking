@@ -54,13 +54,17 @@ class EventAvailabilityQueryIntegrationTest {
 			.then()
 			.statusCode(200)
 			.body("eventId", equalTo(eventId))
+			.body("name", equalTo("Show de Teste"))
 			.body("availableCapacity", equalTo(25))
 	}
 
 	@Test
 	fun `deve consultar o Postgres e repopular o Redis quando a chave nao existe`() {
 		val eventId = createEvent(totalCapacity = 40)
-		redisTemplate.delete(EventAvailabilityCache.availabilityKey(UUID.fromString(eventId)))
+		redisTemplate.delete(listOf(
+			EventAvailabilityCache.availabilityKey(UUID.fromString(eventId)),
+			EventAvailabilityCache.nameKey(UUID.fromString(eventId))
+		))
 
 		RestAssured.given()
 			.`when`()
@@ -68,11 +72,15 @@ class EventAvailabilityQueryIntegrationTest {
 			.then()
 			.statusCode(200)
 			.body("eventId", equalTo(eventId))
+			.body("name", equalTo("Show de Teste"))
 			.body("availableCapacity", equalTo(40))
 
 		val repopulated = redisTemplate.opsForValue()
 			.get(EventAvailabilityCache.availabilityKey(UUID.fromString(eventId)))
 		assertEquals("40", repopulated)
+		val repopulatedName = redisTemplate.opsForValue()
+			.get(EventAvailabilityCache.nameKey(UUID.fromString(eventId)))
+		assertEquals("Show de Teste", repopulatedName)
 	}
 
 	@Test

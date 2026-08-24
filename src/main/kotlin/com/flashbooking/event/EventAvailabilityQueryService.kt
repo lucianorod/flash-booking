@@ -17,17 +17,25 @@ class EventAvailabilityQueryService(
 	fun getAvailability(eventId: UUID): EventAvailabilityResponse {
 		val cached = eventAvailabilityCache.getAvailability(eventId)
 		if (cached != null) {
-			return EventAvailabilityResponse(eventId, cached)
+			return EventAvailabilityResponse(
+				eventId = eventId,
+				name = cached.name,
+				availableCapacity = cached.availableCapacity
+			)
 		}
 
 		val event = eventRepository.findById(eventId).orElseThrow { EventNotFoundException(eventId) }
 
 		try {
-			eventAvailabilityCache.initializeAvailability(eventId, event.availableCapacity)
+			eventAvailabilityCache.initializeAvailability(eventId, event.name, event.availableCapacity)
 		} catch (ex: DataAccessException) {
 			log.warn("Não foi possível repopular a disponibilidade no Redis para o evento {}", eventId, ex)
 		}
 
-		return EventAvailabilityResponse(eventId, event.availableCapacity)
+		return EventAvailabilityResponse(
+			eventId = eventId,
+			name = event.name,
+			availableCapacity = event.availableCapacity
+		)
 	}
 }

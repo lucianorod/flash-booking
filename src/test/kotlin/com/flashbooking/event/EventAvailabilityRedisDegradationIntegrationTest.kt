@@ -36,6 +36,7 @@ class EventAvailabilityRedisDegradationIntegrationTest {
 			.then()
 			.statusCode(200)
 			.body("eventId", equalTo(event.id.toString()))
+			.body("name", equalTo("Show Sem Redis"))
 			.body("availableCapacity", equalTo(15))
 	}
 

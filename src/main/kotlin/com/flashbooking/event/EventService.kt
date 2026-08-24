@@ -21,7 +21,7 @@ class EventService(
 				totalCapacity = requireNotNull(request.totalCapacity)
 			)
 		)
-		eventAvailabilityCache.initializeAvailability(requireNotNull(event.id), event.availableCapacity)
+		eventAvailabilityCache.initializeAvailability(requireNotNull(event.id), event.name, event.availableCapacity)
 		log.info("Evento criado: id={}, name={}, totalCapacity={}", event.id, event.name, event.totalCapacity)
 		return event
 	}

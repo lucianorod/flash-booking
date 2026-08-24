@@ -55,7 +55,10 @@ class EventAvailabilityCreationIntegrationTest {
 
 		val availability = redisTemplate.opsForValue()
 			.get(EventAvailabilityCache.availabilityKey(UUID.fromString(eventId)))
+		val name = redisTemplate.opsForValue()
+			.get(EventAvailabilityCache.nameKey(UUID.fromString(eventId)))
 
 		assertEquals("1000", availability)
+		assertEquals("Show de Rock", name)
 	}
 }

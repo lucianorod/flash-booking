@@ -80,6 +80,7 @@ flowchart TD
 | Chave / Estrutura | Tipo | Finalidade |
 |---|---|---|
 | `event:{eventId}:available` | `String (Integer)` | Contador em tempo real do saldo de ingressos disponíveis. |
+| `event:{eventId}:name` | `String` | Nome do evento em cache para consultas de disponibilidade em memória. |
 | `reservation:{reservationId}` | `Hash` | Dados imediatos da reserva (`eventId`, `userId`, `quantity`, `status`, `expiresAt`). |
 | `idempotency:{idempotencyKey}` | `String` | Guarda o `reservationId` associado para garantir respostas idempotentes rápidas. |
 | `reservations:pending-expiration` | `Sorted Set (ZSET)` | Índice temporal ordenado por *epoch millis* para varredura de expiração. |
@@ -201,6 +202,7 @@ curl -X GET http://localhost:8080/events/3fa85f64-5717-4562-b3fc-2c963f66afa6
 ```json
 {
   "eventId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "name": "Festival de Verão 2026",
   "availableCapacity": 996
 }
 ```
