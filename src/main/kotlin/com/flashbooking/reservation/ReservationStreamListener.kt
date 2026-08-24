@@ -1,5 +1,6 @@
 package com.flashbooking.reservation
 
+import com.flashbooking.reservation.config.ReservationProperties
 import org.slf4j.LoggerFactory
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.data.redis.connection.stream.MapRecord

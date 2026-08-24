@@ -1,4 +1,4 @@
-package com.flashbooking.reservation
+package com.flashbooking.reservation.exception
 
 import java.util.UUID
 

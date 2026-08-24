@@ -1,6 +1,7 @@
 package com.flashbooking.reservation
 
 import com.flashbooking.reservation.dto.ReservationDetailResponse
+import com.flashbooking.reservation.exception.ReservationNotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.dao.DataAccessException
 import org.springframework.stereotype.Service

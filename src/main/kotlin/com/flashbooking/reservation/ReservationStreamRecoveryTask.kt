@@ -1,5 +1,7 @@
 package com.flashbooking.reservation
 
+import com.flashbooking.reservation.config.ReservationConsumerIdentity
+import com.flashbooking.reservation.config.ReservationProperties
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Range
 import org.springframework.data.redis.core.StringRedisTemplate

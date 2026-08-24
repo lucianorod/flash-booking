@@ -1,5 +1,7 @@
 package com.flashbooking.reservation
 
+import com.flashbooking.reservation.exception.ReservationExpiredException
+import com.flashbooking.reservation.exception.ReservationNotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.UUID

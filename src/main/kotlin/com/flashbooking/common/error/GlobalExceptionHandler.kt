@@ -1,9 +1,9 @@
 package com.flashbooking.common.error
 
-import com.flashbooking.event.EventNotFoundException
-import com.flashbooking.reservation.InsufficientStockException
-import com.flashbooking.reservation.ReservationExpiredException
-import com.flashbooking.reservation.ReservationNotFoundException
+import com.flashbooking.event.exception.EventNotFoundException
+import com.flashbooking.reservation.exception.InsufficientStockException
+import com.flashbooking.reservation.exception.ReservationExpiredException
+import com.flashbooking.reservation.exception.ReservationNotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity

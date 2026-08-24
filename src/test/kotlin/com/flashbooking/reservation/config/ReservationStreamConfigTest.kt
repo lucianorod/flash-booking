@@ -1,4 +1,4 @@
-package com.flashbooking.reservation
+package com.flashbooking.reservation.config
 
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Test

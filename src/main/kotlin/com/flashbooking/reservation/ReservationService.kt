@@ -1,8 +1,10 @@
 package com.flashbooking.reservation
 
 import com.flashbooking.event.EventAvailabilityQueryService
+import com.flashbooking.reservation.config.ReservationProperties
 import com.flashbooking.reservation.dto.CreateReservationRequest
 import com.flashbooking.reservation.dto.ReservationResponse
+import com.flashbooking.reservation.exception.InsufficientStockException
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.Instant

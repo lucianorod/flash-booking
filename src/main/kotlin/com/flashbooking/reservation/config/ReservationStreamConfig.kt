@@ -1,5 +1,7 @@
-package com.flashbooking.reservation
+package com.flashbooking.reservation.config
 
+import com.flashbooking.reservation.ReservationLuaExecutor
+import com.flashbooking.reservation.ReservationStreamListener
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
@@ -27,9 +29,7 @@ class ReservationStreamConfig {
 		val hostName = runCatching { InetAddress.getLocalHost().hostName }.getOrDefault("unknown-host")
 		return ReservationConsumerIdentity("reservation-worker-$hostName-${UUID.randomUUID().toString().take(8)}")
 	}
-
-	// Desligável apenas em testes que precisam controlar manualmente a entrega de mensagens
-	// pendentes (recuperação e reprocessamento), sem o container consumindo o stream em paralelo.
+	
 	@Bean
 	@ConditionalOnProperty(
 		prefix = "flash-booking.reservation.stream-consumer",

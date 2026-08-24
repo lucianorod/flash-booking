@@ -1,4 +1,4 @@
-package com.flashbooking.event
+package com.flashbooking.event.exception
 
 import java.util.UUID
 
