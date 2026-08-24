@@ -115,7 +115,7 @@ stateDiagram-v2
 
 ```bash
 # 1. Clone o repositório
-git clone https://github.com/seu-usuario/flash-booking.git
+git clone https://github.com/lucianorod/flash-booking.git
 cd flash-booking
 
 # 2. Inicialize a infraestrutura (PostgreSQL 16 e Redis 7)
