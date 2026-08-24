@@ -342,6 +342,11 @@ Para cenários de hiperescala ou fases posteriores do produto, destacam-se as se
 5. **Suporte a Redis Cluster & Particionamento de Eventos:**
    - Aplicação de chaves baseadas em *hash tags* (ex.: `{event:123}:available`) para particionar a carga entre múltiplos nós de um cluster Redis, suportando eventos globais com milhões de requisições simultâneas.
 
+6. **Setores e Lugares Específicos dentro do Evento:**
+   - Hoje o modelo trata cada evento como um contador único de capacidade (`event:{id}:available`), sem distinção de localização física. Para casos de uso como shows com pista, camarote e cadeiras numeradas, o modelo evoluiria para representar **setores** como sub-recursos do evento, cada um com sua própria capacidade e seu próprio contador atômico no Redis (ex.: `event:{id}:sector:{sectorId}:available`), permitindo reservar ingressos de um setor específico sem impactar o saldo dos demais.
+   - Para assentos numerados, seria necessário um passo além do contador agregado: uma estrutura que rastreie o estado individual de cada lugar (ex.: `Hash` ou `Bitmap` por setor, marcando cada assento como `disponível`/`reservado`/`vendido`), com o script Lua validando e reservando os assentos específicos solicitados de forma atômica, em vez de apenas decrementar uma quantidade.
+   - Essa mudança se reflete em todo o pipeline já existente: o `reserve_tickets.lua` passaria a receber o(s) identificador(es) de assento ou setor como parâmetro, a `Reservation` no Postgres ganharia uma referência ao setor/assento reservado, e a expiração automática devolveria a disponibilidade ao setor correto — mas a arquitetura de fundo (Lua atômico para decisão, Redis Stream para sincronização assíncrona com o Postgres) permanece a mesma.
+
 ---
 
 ## 🛠️ Stack Tecnológica
