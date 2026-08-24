@@ -64,15 +64,15 @@ class ReservationCreationIntegrationTest {
 		val reservationId = RestAssured.given()
 			.contentType(ContentType.JSON)
 			.header("Idempotency-Key", idempotencyKey)
-			.body("""{"user_id": "$userId", "quantity": 3}""")
+			.body("""{"userId": "$userId", "quantity": 3}""")
 			.`when`()
 			.post("/events/$eventId/reservations")
 			.then()
 			.statusCode(201)
-			.body("reservation_id", notNullValue())
+			.body("reservationId", notNullValue())
 			.body("status", equalTo("PENDING"))
 			.extract()
-			.path<String>("reservation_id")
+			.path<String>("reservationId")
 
 		assertEquals("7", availableCapacity(eventId))
 
@@ -90,7 +90,7 @@ class ReservationCreationIntegrationTest {
 	@Test
 	fun `deve retornar a mesma reserva ao reenviar a mesma Idempotency-Key`() {
 		val eventId = createEvent(totalCapacity = 10)
-		val requestBody = """{"user_id": "${UUID.randomUUID()}", "quantity": 2}"""
+		val requestBody = """{"userId": "${UUID.randomUUID()}", "quantity": 2}"""
 		val idempotencyKey = UUID.randomUUID().toString()
 
 		val firstReservationId = RestAssured.given()
@@ -102,7 +102,7 @@ class ReservationCreationIntegrationTest {
 			.then()
 			.statusCode(201)
 			.extract()
-			.path<String>("reservation_id")
+			.path<String>("reservationId")
 
 		RestAssured.given()
 			.contentType(ContentType.JSON)
@@ -112,7 +112,7 @@ class ReservationCreationIntegrationTest {
 			.post("/events/$eventId/reservations")
 			.then()
 			.statusCode(200)
-			.body("reservation_id", equalTo(firstReservationId))
+			.body("reservationId", equalTo(firstReservationId))
 
 		assertEquals("8", availableCapacity(eventId))
 	}
@@ -124,7 +124,7 @@ class ReservationCreationIntegrationTest {
 		RestAssured.given()
 			.contentType(ContentType.JSON)
 			.header("Idempotency-Key", UUID.randomUUID().toString())
-			.body("""{"user_id": "${UUID.randomUUID()}", "quantity": 5}""")
+			.body("""{"userId": "${UUID.randomUUID()}", "quantity": 5}""")
 			.`when`()
 			.post("/events/$eventId/reservations")
 			.then()
@@ -140,7 +140,7 @@ class ReservationCreationIntegrationTest {
 
 		RestAssured.given()
 			.contentType(ContentType.JSON)
-			.body("""{"user_id": "${UUID.randomUUID()}", "quantity": 1}""")
+			.body("""{"userId": "${UUID.randomUUID()}", "quantity": 1}""")
 			.`when`()
 			.post("/events/$eventId/reservations")
 			.then()
@@ -154,7 +154,7 @@ class ReservationCreationIntegrationTest {
 		RestAssured.given()
 			.contentType(ContentType.JSON)
 			.header("Idempotency-Key", UUID.randomUUID().toString())
-			.body("""{"user_id": "${UUID.randomUUID()}", "quantity": 0}""")
+			.body("""{"userId": "${UUID.randomUUID()}", "quantity": 0}""")
 			.`when`()
 			.post("/events/$eventId/reservations")
 			.then()

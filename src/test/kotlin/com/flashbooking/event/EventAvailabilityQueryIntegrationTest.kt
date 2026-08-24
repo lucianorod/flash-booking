@@ -53,8 +53,8 @@ class EventAvailabilityQueryIntegrationTest {
 			.get("/events/$eventId")
 			.then()
 			.statusCode(200)
-			.body("event_id", equalTo(eventId))
-			.body("available_capacity", equalTo(25))
+			.body("eventId", equalTo(eventId))
+			.body("availableCapacity", equalTo(25))
 	}
 
 	@Test
@@ -67,8 +67,8 @@ class EventAvailabilityQueryIntegrationTest {
 			.get("/events/$eventId")
 			.then()
 			.statusCode(200)
-			.body("event_id", equalTo(eventId))
-			.body("available_capacity", equalTo(40))
+			.body("eventId", equalTo(eventId))
+			.body("availableCapacity", equalTo(40))
 
 		val repopulated = redisTemplate.opsForValue()
 			.get(EventAvailabilityCache.availabilityKey(UUID.fromString(eventId)))

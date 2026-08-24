@@ -64,7 +64,7 @@ class ReservationConcurrencyIntegrationTest {
 				RestAssured.given()
 					.contentType(ContentType.JSON)
 					.header("Idempotency-Key", "concurrency-test-$index-${UUID.randomUUID()}")
-					.body("""{"user_id": "${UUID.randomUUID()}", "quantity": 1}""")
+					.body("""{"userId": "${UUID.randomUUID()}", "quantity": 1}""")
 					.`when`()
 					.post("/events/$eventId/reservations")
 					.then()

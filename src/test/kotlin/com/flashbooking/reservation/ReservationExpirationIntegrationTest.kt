@@ -59,13 +59,13 @@ class ReservationExpirationIntegrationTest {
 		RestAssured.given()
 			.contentType(ContentType.JSON)
 			.header("Idempotency-Key", UUID.randomUUID().toString())
-			.body("""{"user_id": "${UUID.randomUUID()}", "quantity": $quantity}""")
+			.body("""{"userId": "${UUID.randomUUID()}", "quantity": $quantity}""")
 			.`when`()
 			.post("/events/$eventId/reservations")
 			.then()
 			.statusCode(201)
 			.extract()
-			.path<String>("reservation_id")
+			.path<String>("reservationId")
 
 	private fun availableCapacity(eventId: String): String? =
 		redisTemplate.opsForValue().get(EventAvailabilityCache.availabilityKey(UUID.fromString(eventId)))

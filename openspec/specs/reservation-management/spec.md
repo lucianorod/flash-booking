@@ -21,10 +21,10 @@ O sistema SHALL impedir a existência de duas reservas com a mesma chave de idem
 - **THEN** a persistência da segunda reserva falha, e a reserva original permanece inalterada
 
 ### Requirement: Criação de reserva
-O sistema SHALL permitir a criação de uma reserva para um evento através de uma requisição `POST /events/<id>/reservations`, exigindo o header `Idempotency-Key` e um corpo com `user_id` e `quantity`, aceitando a reserva quando os dados forem válidos e houver saldo disponível suficiente.
+O sistema SHALL permitir a criação de uma reserva para um evento através de uma requisição `POST /events/<id>/reservations`, exigindo o header `Idempotency-Key` e um corpo com `userId` e `quantity`, aceitando a reserva quando os dados forem válidos e houver saldo disponível suficiente.
 
 #### Scenario: Reserva aceita com dados válidos e saldo suficiente
-- **WHEN** uma requisição `POST /events/<id>/reservations` é enviada com um `Idempotency-Key` inédito, `user_id` e `quantity` válidos, e o evento possui saldo disponível suficiente
+- **WHEN** uma requisição `POST /events/<id>/reservations` é enviada com um `Idempotency-Key` inédito, `userId` e `quantity` válidos, e o evento possui saldo disponível suficiente
 - **THEN** o sistema responde com status 201 (Created) e o identificador da reserva aceita
 
 ### Requirement: Resposta idempotente para chave de idempotência repetida
@@ -42,7 +42,7 @@ O sistema SHALL responder com status 409 (Conflict), sem aceitar a reserva, quan
 - **THEN** o sistema responde com status 409 (Conflict) e nenhuma reserva é criada
 
 ### Requirement: Validação dos dados de entrada da reserva
-O sistema SHALL validar a presença do header `Idempotency-Key` e do `user_id`, e que `quantity` seja um inteiro positivo, retornando um erro explícito sem criar a reserva quando os dados forem inválidos.
+O sistema SHALL validar a presença do header `Idempotency-Key` e do `userId`, e que `quantity` seja um inteiro positivo, retornando um erro explícito sem criar a reserva quando os dados forem inválidos.
 
 #### Scenario: Requisição sem o header Idempotency-Key
 - **WHEN** uma requisição `POST /events/<id>/reservations` é enviada sem o header `Idempotency-Key`

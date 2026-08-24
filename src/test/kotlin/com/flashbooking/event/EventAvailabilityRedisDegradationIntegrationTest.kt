@@ -35,8 +35,8 @@ class EventAvailabilityRedisDegradationIntegrationTest {
 			.get("/events/${event.id}")
 			.then()
 			.statusCode(200)
-			.body("event_id", equalTo(event.id.toString()))
-			.body("available_capacity", equalTo(15))
+			.body("eventId", equalTo(event.id.toString()))
+			.body("availableCapacity", equalTo(15))
 	}
 
 	@Test
