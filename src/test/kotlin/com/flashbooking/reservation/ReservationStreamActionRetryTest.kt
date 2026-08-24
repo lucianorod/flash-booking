@@ -1,5 +1,7 @@
 package com.flashbooking.reservation
 
+import com.flashbooking.event.Event
+import com.flashbooking.event.EventRepository
 import com.flashbooking.testsupport.TestRedisConfiguration
 import com.flashbooking.testsupport.resetReservationStreamGroup
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -12,6 +14,8 @@ import org.springframework.data.domain.Range
 import org.springframework.data.redis.connection.stream.MapRecord
 import org.springframework.data.redis.connection.stream.RecordId
 import org.springframework.data.redis.core.StringRedisTemplate
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 @Import(TestRedisConfiguration::class)
@@ -22,6 +26,9 @@ import java.util.UUID
 	]
 )
 class ReservationStreamActionRetryTest {
+
+	@Autowired
+	private lateinit var eventRepository: EventRepository
 
 	@Autowired
 	private lateinit var reservationRepository: ReservationRepository
@@ -35,7 +42,33 @@ class ReservationStreamActionRetryTest {
 	@BeforeEach
 	fun setUp() {
 		reservationRepository.deleteAll()
+		eventRepository.deleteAll()
 		resetReservationStreamGroup(redisTemplate)
+	}
+
+	@Test
+	fun `nao deve incrementar o saldo do evento duas vezes ao reprocessar o mesmo CANCEL`() {
+		val event = eventRepository.save(Event(name = "Show com Reentrega", totalCapacity = 20))
+		val reservation = reservationRepository.save(
+			Reservation(
+				id = UUID.randomUUID(),
+				eventId = requireNotNull(event.id),
+				userId = UUID.randomUUID(),
+				quantity = 3,
+				expiresAt = Instant.now().plus(15, ChronoUnit.MINUTES),
+				idempotencyKey = UUID.randomUUID().toString(),
+				initialStatus = ReservationStatus.PENDING
+			)
+		)
+		val record = fabricateRecord(mapOf("reservationId" to reservation.id.toString(), "action" to "CANCEL"))
+
+		reservationStreamListener.onMessage(record)
+		reservationStreamListener.onMessage(record)
+
+		assertEquals(ReservationStatus.CANCELLED, reservationRepository.findById(reservation.id).orElseThrow().status)
+		// A reserva foi inserida diretamente (sem passar pelo CREATE), então o saldo nunca foi decrementado;
+		// o cancelamento processado duas vezes deve incrementá-lo uma única vez: 20 + 3, nunca 20 + 3 + 3.
+		assertEquals(23, eventRepository.findById(requireNotNull(event.id)).orElseThrow().availableCapacity)
 	}
 
 	@Test

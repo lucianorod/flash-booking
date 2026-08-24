@@ -97,6 +97,7 @@ class ReservationExpirationIntegrationTest {
 		awaitUntil {
 			reservationRepository.findById(reservationUuid).map { it.status == ReservationStatus.EXPIRED }.orElse(false)
 		}
+		assertEquals(10, eventRepository.findById(UUID.fromString(eventId)).orElseThrow().availableCapacity)
 	}
 
 	@Test
@@ -118,6 +119,7 @@ class ReservationExpirationIntegrationTest {
 		awaitUntil {
 			reservationRepository.findById(reservationUuid).map { it.status == ReservationStatus.CANCELLED }.orElse(false)
 		}
+		assertEquals(10, eventRepository.findById(UUID.fromString(eventId)).orElseThrow().availableCapacity)
 	}
 
 	@Test
@@ -140,5 +142,6 @@ class ReservationExpirationIntegrationTest {
 		awaitUntil {
 			reservationRepository.findById(reservationUuid).map { it.status == ReservationStatus.EXPIRED }.orElse(false)
 		}
+		assertEquals(10, eventRepository.findById(UUID.fromString(eventId)).orElseThrow().availableCapacity)
 	}
 }

@@ -59,5 +59,8 @@ class ReservationStreamListenerTest {
 		val persisted = reservationRepository.findById(reservationId).orElseThrow()
 		assertEquals(userId, persisted.userId)
 		assertEquals(2, persisted.quantity)
+
+		val persistedEvent = eventRepository.findById(requireNotNull(event.id)).orElseThrow()
+		assertEquals(18, persistedEvent.availableCapacity)
 	}
 }

@@ -134,6 +134,7 @@ class ReservationQueryCancellationIntegrationTest {
 		awaitUntil {
 			reservationRepository.findById(reservationUuid).map { it.status == ReservationStatus.CANCELLED }.orElse(false)
 		}
+		assertEquals(10, eventRepository.findById(UUID.fromString(eventId)).orElseThrow().availableCapacity)
 	}
 
 	@Test
@@ -154,6 +155,7 @@ class ReservationQueryCancellationIntegrationTest {
 		awaitUntil {
 			reservationRepository.findById(UUID.fromString(reservationId)).map { it.status == ReservationStatus.CANCELLED }.orElse(false)
 		}
+		assertEquals(10, eventRepository.findById(UUID.fromString(eventId)).orElseThrow().availableCapacity)
 	}
 
 	@Test

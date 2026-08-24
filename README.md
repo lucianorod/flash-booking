@@ -68,6 +68,7 @@ flowchart TD
   - Reservas pendentes entram em um `Sorted Set` (`ZSET`) ordenado pelo timestamp de expiração.
   - Uma rotina periódica executa um script atômico (`expire_reservations.lua`) que estorna o estoque e cancela reservas vencidas em lotes.
 - 🔄 **Cache-Aside / Read-Through Resiliente:** Consultas `GET /reservations/{id}` e `GET /events/{id}` leem primeiro do Redis (cobrindo o período de consistência eventual) e possuem *fallback* automático com recarga (*repopulate*) a partir do PostgreSQL.
+- 🧮 **Saldo Sincronizado no PostgreSQL:** O worker que persiste `CREATE`, `CANCEL` e `EXPIRE` também ajusta `events.available_capacity` atomicamente (via `UPDATE` de uma instrução só, na mesma transação), usando `UPDATE ... WHERE status IN (...)` para garantir que uma mensagem reentregue nunca decremente ou devolva o saldo duas vezes.
 - 🛰️ **Resiliência Multi-Instância:**
   - Identidade exclusiva de consumidores (`host + UUID`) dentro do *consumer group*.
   - Tarefa de auto-recuperação (`ReservationStreamRecoveryTask`) com `XCLAIM` para resgatar mensagens travadas por instâncias que falharam.
@@ -333,8 +334,8 @@ Para cenários de hiperescala ou fases posteriores do produto, destacam-se as se
    - **Prevenção de expiração prematura:** Ao iniciar o checkout no gateway (ex.: digitação de cartão, geração de PIX ou redirecionamento), a reserva transita para um estado intermediário (ex.: `PAYMENT_PENDING` ou `PROCESSING`) ou recebe uma extensão dinâmica de tempo (*heartbeat* / renovação de TTL no `ZSET` do Redis).
    - **Garantia de chegada do Webhook:** Essa extensão protege o ingresso de ser liberado de volta ao estoque geral enquanto a operadora financeira processa a transação, assegurando que o *webhook* assíncrono de confirmação chegue e conclua a compra (`CONFIRMED`) sem risco de os ingressos terem sido vendidos para outro usuário nesse intervalo.
 
-3. **Reconciliação e Auditoria Periódica de Saldo:**
-   - Implementação de um *job* em segundo plano (*Reconciliation Worker*) para auditar e sincronizar eventuais desvios entre os registros históricos do PostgreSQL e o saldo atômico operacional do Redis.
+3. **Auditoria Periódica de Divergências:**
+   - O worker já mantém `events.available_capacity` sincronizado com cada `CREATE`/`CANCEL`/`EXPIRE` processado, mas isso não cobre desvios de causas anômalas (edição manual do banco, bug num reprocessamento, etc.). Um *job* de auditoria periódica comparando o saldo do Postgres com o contador do Redis complementaria essa sincronização, sinalizando divergências para investigação.
 
 4. **Proteção contra Bots e Rate Limiting (Token Bucket):**
    - Inclusão de um *Rate Limiter* distribuído por IP/usuário no Redis para prevenir ataques de negação de serviço e *scripts* automatizados de compra em frações de segundo.

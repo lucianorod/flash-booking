@@ -85,6 +85,9 @@ class ReservationCreationIntegrationTest {
 		assertEquals(3, persisted.quantity)
 		assertEquals(ReservationStatus.PENDING, persisted.status)
 		assertEquals(idempotencyKey, persisted.idempotencyKey)
+
+		val persistedEvent = eventRepository.findById(UUID.fromString(eventId)).orElseThrow()
+		assertEquals(7, persistedEvent.availableCapacity)
 	}
 
 	@Test
@@ -116,6 +119,9 @@ class ReservationCreationIntegrationTest {
 
 		assertEquals("8", availableCapacity(eventId))
 		awaitUntil { reservationRepository.findById(UUID.fromString(firstReservationId)).isPresent }
+
+		val persistedEvent = eventRepository.findById(UUID.fromString(eventId)).orElseThrow()
+		assertEquals(8, persistedEvent.availableCapacity)
 	}
 
 	@Test

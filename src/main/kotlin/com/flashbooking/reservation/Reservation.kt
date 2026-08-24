@@ -52,12 +52,4 @@ class Reservation(
 	@Column(name = "updated_at", nullable = false)
 	var updatedAt: Instant? = null
 		protected set
-
-	fun markCancelled() {
-		status = ReservationStatus.CANCELLED
-	}
-
-	fun markExpired() {
-		status = ReservationStatus.EXPIRED
-	}
 }

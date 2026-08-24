@@ -2,7 +2,6 @@ package com.flashbooking.reservation
 
 import com.flashbooking.reservation.config.ReservationProperties
 import org.slf4j.LoggerFactory
-import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.data.redis.connection.stream.MapRecord
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.data.redis.stream.StreamListener
@@ -13,6 +12,7 @@ import java.util.UUID
 @Component
 class ReservationStreamListener(
 	private val reservationRepository: ReservationRepository,
+	private val reservationPersistenceService: ReservationPersistenceService,
 	private val redisTemplate: StringRedisTemplate,
 	private val reservationProperties: ReservationProperties
 ) : StreamListener<String, MapRecord<String, String, String>> {
@@ -36,26 +36,33 @@ class ReservationStreamListener(
 	}
 
 	private fun handleCreate(fields: Map<String, String>) {
-		try {
-			reservationRepository.save(toReservation(fields))
-			log.info("Reserva {} persistida no Postgres via CREATE", fields["reservationId"])
-		} catch (_: DataIntegrityViolationException) {
+		val persisted = reservationPersistenceService.persistCreated(toReservation(fields))
+		if (persisted) {
+			log.info(
+				"Reserva {} persistida no Postgres via CREATE, saldo do evento decrementado",
+				fields["reservationId"]
+			)
+		} else {
 			log.info("Reserva {} já persistida anteriormente, ignorando reentrega", fields["reservationId"])
 		}
 	}
 
 	private fun handleCancel(fields: Map<String, String>) {
-		applyStatusChangeOrRequeue(fields, action = "CANCEL") { it.markCancelled() }
+		applyStatusChangeOrRequeue(fields, action = "CANCEL") { reservation ->
+			reservationPersistenceService.applyCancellation(reservation.id, reservation.eventId, reservation.quantity)
+		}
 	}
 
 	private fun handleExpire(fields: Map<String, String>) {
-		applyStatusChangeOrRequeue(fields, action = "EXPIRE") { it.markExpired() }
+		applyStatusChangeOrRequeue(fields, action = "EXPIRE") { reservation ->
+			reservationPersistenceService.applyExpiration(reservation.id, reservation.eventId, reservation.quantity)
+		}
 	}
 
 	private fun applyStatusChangeOrRequeue(
 		fields: Map<String, String>,
 		action: String,
-		transition: (Reservation) -> Unit
+		transition: (Reservation) -> Boolean
 	) {
 		val reservationId = UUID.fromString(requireNotNull(fields["reservationId"]))
 		val reservation = reservationRepository.findById(reservationId).orElse(null)
@@ -63,9 +70,15 @@ class ReservationStreamListener(
 			requeueOrTreatAsPoison(fields, action, reservationId)
 			return
 		}
-		transition(reservation)
-		reservationRepository.save(reservation)
-		log.info("Reserva {} atualizada no Postgres via {}: novo status={}", reservationId, action, reservation.status)
+		if (transition(reservation)) {
+			log.info("Reserva {} atualizada no Postgres via {}, saldo do evento ajustado", reservationId, action)
+		} else {
+			log.info(
+				"Reserva {} já estava em status final ao processar {}; nenhuma alteração aplicada",
+				reservationId,
+				action
+			)
+		}
 	}
 
 	private fun requeueOrTreatAsPoison(fields: Map<String, String>, action: String, reservationId: UUID) {
