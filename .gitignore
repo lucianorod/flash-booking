@@ -42,3 +42,6 @@ out/
 ### AI Assistant Config ###
 .claude/
 
+### Local docs ###
+Case BackEnd.pdf
+
