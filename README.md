@@ -110,7 +110,6 @@ stateDiagram-v2
 
 ### Pré-requisitos
 - [Docker](https://www.docker.com/) e Docker Compose instalados.
-- [Java 21](https://adoptium.net/) (o projeto utiliza toolchain Gradle para JDK 21).
 
 ### Passo a Passo
 
@@ -119,14 +118,25 @@ stateDiagram-v2
 git clone https://github.com/lucianorod/flash-booking.git
 cd flash-booking
 
-# 2. Inicialize a infraestrutura (PostgreSQL 16 e Redis 7)
+# 2. Suba tudo: aplicação, PostgreSQL 16 e Redis 7
 docker compose up -d
+```
 
-# 3. Inicie a aplicação
+O `docker compose up` constrói a imagem da aplicação (via `Dockerfile`, multi-stage build com JDK 21 para compilar e JRE 21 para rodar) e só a inicia depois que o Postgres e o Redis estiverem saudáveis (`healthcheck`). A aplicação fica disponível em `http://localhost:8080`.
+
+> [!TIP]
+> Depois de alterar o código, rode `docker compose up -d --build` pra reconstruir a imagem da aplicação com as mudanças.
+
+### Alternativa para desenvolvimento local
+
+Se preferir rodar a aplicação direto na sua máquina (fora de container) para ciclos de feedback mais rápidos, suba só a infraestrutura e use o Gradle:
+
+```bash
+docker compose up -d postgres redis
 ./gradlew bootRun
 ```
 
-A aplicação estará disponível em `http://localhost:8080`.
+Nesse caso é necessário ter o [Java 21](https://adoptium.net/) instalado (o projeto usa toolchain Gradle para JDK 21).
 
 ### 📚 Documentação Interativa da API
 - **Swagger UI:** [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
